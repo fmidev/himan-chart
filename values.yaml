@@ -1,0 +1,36 @@
+# Default values for himan.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository:
+    address: quay.io/fmi/himan
+    tag: latest
+
+  pullPolicy: Always
+  tag: "latest"
+
+  configuration:
+    enabled: true
+    git:
+      repository: git@github.com:org/repo.git
+      branch: master
+
+    sshKey:
+      name:
+
+job:
+  restartPolicy: Never
+
+s3:
+  credentials:
+    name: 
+
+radon:
+  host: localhost
+  port: 5432
+  credentials:
+    name: radon-credentials
+

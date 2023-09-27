@@ -1,0 +1,45 @@
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ .Release.Name }}:latest
+  resources:
+    limits:
+      cpu: "1"
+      memory: 1Gi
+    requests:
+      cpu: "1"
+      memory: 1Gi
+  runPolicy: Serial
+  source:
+    type: Dockerfile
+{{ if .Values.image.configuration.sshKey.name }}
+    secrets:
+    - destinationDir: secrets
+      secret:
+        name: {{ .Values.image.configuration.sshKey.name }}
+{{- end }}
+    dockerfile: |
+      FROM {{ .Values.image.repository.address }}:{{ .Values.image.repository.tag }}
+      
+      {{- if .Values.image.configuration.enabled }}
+      ENV GIT_SSH_COMMAND "ssh -i /ssh-privatekey -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
+      COPY secrets /
+      RUN dnf -y install git s3cmd jq && dnf clean all && mkdir ~/.ssh/ && \
+          git clone --branch {{ .Values.image.configuration.git.branch }} {{ .Values.image.configuration.git.repository }}
+
+      {{- end }}
+
+    type: Git
+  strategy:
+    type: Docker
+    dockerStrategy:
+      imageOptimizationPolicy: SkipLayers
+  successfulBuildsHistoryLimit: 2
+  triggers:
+    - type: ConfigChange

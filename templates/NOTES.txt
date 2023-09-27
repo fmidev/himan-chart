@@ -1,0 +1,5 @@
+
+Himan configured with release name {{ .Release.Name }}
+{{ if .Values.image.configuration.enabled }}
+Configuration pulled from {{ .Values.image.configuration.git.repository }} branch '{{ .Values.image.configuration.git.branch }}'
+{{- end }}
