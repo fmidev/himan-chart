@@ -30,24 +30,29 @@ objects:
           - |
             set -u
 
-            conf=$(cat ${CONFIGURATION})
-            test -n "${START_HOUR}" && conf=$(echo $conf | jq --arg a ${START_HOUR} '.start_hour=$a')
-            test -n "${STOP_HOUR}" && conf=$(echo $conf | jq --arg a ${STOP_HOUR} '.stop_hour=$a')
-            test -n "${STEP_LENGTH}" && conf=$(echo $conf | jq --arg a ${STEP_LENGTH} '.step=$a')
-            test -n "${START_MINUTE}" && conf=$(echo $conf | jq --arg a ${START_MINUTE} '.start_minute=$a')
-            test -n "${STOP_MINUTE}" && conf=$(echo $conf | jq --arg a ${STOP_MINUTE} '.stop_minute=$a')
-            test -n "${HOURS}" && conf=$(echo $conf | jq --arg a ${HOURS} '.hours=$a')
-            test -n "${ANALYSIS_TIME}" && conf=$(echo $conf | jq --arg a "${ANALYSIS_TIME}" '.origintime=$a')
-            test -n "${FORECAST_TYPE}" && conf=$(echo $conf | jq --arg a ${FORECAST_TYPE} '.forecast_type=$a')
-            test -n "${FILENAME_TEMPLATE}" && conf=$(echo $conf | jq --arg a ${FILENAME_TEMPLATE} '.filename_template=$a')
-            test -n "${WRITE_STORAGE_TYPE}" && conf=$(echo $conf | jq --arg a ${WRITE_STORAGE_TYPE} '.write_storage_type=$a')
-            test -n "${CACHE_LIMIT}" && conf=$(echo $conf | jq --arg a ${CACHE_LIMIT} '.cache_limit=$a')
+            if [ -n "${COMMAND}" ]; then
+              echo "Running command ${COMMAND}"
+              ${COMMAND}
+            else
+              conf=$(cat ${CONFIGURATION})
+              test -n "${START_HOUR}" && conf=$(echo $conf | jq --arg a ${START_HOUR} '.start_hour=$a')
+              test -n "${STOP_HOUR}" && conf=$(echo $conf | jq --arg a ${STOP_HOUR} '.stop_hour=$a')
+              test -n "${STEP_LENGTH}" && conf=$(echo $conf | jq --arg a ${STEP_LENGTH} '.step=$a')
+              test -n "${START_MINUTE}" && conf=$(echo $conf | jq --arg a ${START_MINUTE} '.start_minute=$a')
+              test -n "${STOP_MINUTE}" && conf=$(echo $conf | jq --arg a ${STOP_MINUTE} '.stop_minute=$a')
+              test -n "${HOURS}" && conf=$(echo $conf | jq --arg a ${HOURS} '.hours=$a')
+              test -n "${ANALYSIS_TIME}" && conf=$(echo $conf | jq --arg a "${ANALYSIS_TIME}" '.origintime=$a')
+              test -n "${FORECAST_TYPE}" && conf=$(echo $conf | jq --arg a ${FORECAST_TYPE} '.forecast_type=$a')
+              test -n "${FILENAME_TEMPLATE}" && conf=$(echo $conf | jq --arg a ${FILENAME_TEMPLATE} '.filename_template=$a')
+              test -n "${WRITE_STORAGE_TYPE}" && conf=$(echo $conf | jq --arg a ${WRITE_STORAGE_TYPE} '.write_storage_type=$a')
+              test -n "${CACHE_LIMIT}" && conf=$(echo $conf | jq --arg a ${CACHE_LIMIT} '.cache_limit=$a')
 
-            set -e
+              set -e
 
-            echo $conf | jq '.' 
-            echo $conf | himan -s -f -
-  
+              echo $conf | jq '.'
+              echo $conf | himan -s -f -
+            fi
+
             if [ -n "${ECF_NAME}" ]; then
           
               payload=$(jq -n \
@@ -83,6 +88,10 @@ objects:
             value: /tmp
           - name: S3_HOSTNAME
             value: ${S3_HOSTNAME}
+          - name: ENVIRONMENT
+            value: {{ .Values.environment }}
+          - name: CLOUD
+            value: {{ .Values.cloud }}
           - name: HIMAN_NUM_THREADS
             valueFrom:
               resourceFieldRef:
@@ -176,4 +185,7 @@ parameters:
   value:
 - description: Cache limit
   name: CACHE_LIMIT
+  value:
+- description: Override command
+  name: COMMAND
   value:
